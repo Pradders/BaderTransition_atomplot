@@ -1,17 +1,60 @@
 # BaderCharge_plotter
+
 Leverages ASE, numpy and pyplot to calculate the differences in Bader charges between two structures acquired from VASP and then colour the different atoms according to the difference in charge (i.e., whether positive or negative).
 
-Version 1.5 (v1.5) current release.
+Version 2.0 (v2.0) current release.
+
+# Version 2.0
+
+Version 2.0 (v2.0) updates the Bader charge visualisation for reaction/NEB structures.
+
+Key updates:
+
+* Initial, final and Δq plots use consistent atom ordering.
+* An optional external reference structure can be used to align the reference surface.
+* Without an external reference, the final structure is used as the reference.
+* Reference atoms are defined using `reference_symbols` (default: `("Ni",)`).
+* Reference structures are checked for element and atom-count consistency.
+
+## Reference structure
+
+An optional external reference structure can be used to maintain a consistent representation of the reference surface between the initial and final states.
+
+In `main.py`:
+
+```python
+reference_folder = "reference"
+reference_symbols = ("Ni",)
+```
+
+If no external reference is required:
+
+```python
+reference_folder = None
+```
+
+The reference folder should contain either a `CONTCAR` or `POSCAR`, with `CONTCAR` preferred.
+
+The selected `reference_symbols` identify the atoms used to align the reference representation.
+
+When an external reference is supplied, the selected reference atoms in the initial and final structures are represented consistently with the external reference while the remaining atoms retain their respective reaction-state positions.
+
+When no external reference is supplied, the selected reference atoms in the initial structure are aligned to their corresponding positions in the final structure.
 
 # General procedure
 
 ## Overview
-This analysis will calculate the Bader charge difference between the initial and final stages of a transition state (e.g., NEB).
+
+This analysis will calculate the Bader charge difference between the initial and final stages of a transition state (e.g., NEB). The charge difference is calculated for the complete structure and is displayed using the final-state atomic positions.
 
 ## Folder and file access
+
 The atomic positions (POSCAR/CONTCAR) and the Bader charges (ACF.dat) will have been collected through VASP calculations. These will be placed within the initial and final folders of each reaction/transition, relative to the main.py file, which is the main file that executes the code. The names of the initial and final folders are respectively "ini" and "fin" by default and additional and/or replacement names (e.g., "initial", "final", "is", "fs") can be provided. If a .json file containing the maximum desired Bader charge already exists, then the user can choose to import the value or ignore it.
 
+An optional external reference structure can also be supplied through `reference_folder` in `main.py`. This structure is used to maintain a consistent representation of the selected reference atoms between systems.
+
 ## Projection
+
 Additionally, atoms will be shifted in a given direction in case they (particularly adsorbates) extend over the unit cell dimensions, especially in the x,y planes and will be relative to the atom in each system that possesses the highest radius. The user will need to input integers of the x, y shifts, which will be multiplied by the maximum covalent diameter in the system (i.e., input such integers as -1, 0, +1, etc., where negative = left/down shift and positive = right/up shift). That is, all of the atoms will be shifted left, right, up, or down depending on what input value and sign is input.
 
 For reviewing images for shifting, one of the following methods must be selected and confirmed:
@@ -24,17 +67,22 @@ For reviewing images for shifting, one of the following methods must be selected
 
 4: NO shift to ANY image (That is, apply no shift to any individual image)
 
-If any of the inputs (see [Inputs](#inputs)) are not appropriately met with the program requirements, then the inputs will be looped and re-initiated for the user. 
+If any of the inputs (see [Inputs](#inputs)) are not appropriately met with the program requirements, then the inputs will be looped and re-initiated for the user.
 
 ## Colour coding
-After conducting the projections, the difference in Bader charge between both images will be calculated. From this, the initial and final atomic systems will be elementally colour-coded which can be configured (e.g., Ni = lightgray, C = black) and saved into an image and the final image will be reincluded adjacent and colour coded (default: red-blue) using a colormap depending on the Bader charge range. Please note that the maximum absolute Bader charge difference across all images will be stored and used in determining the colormap range. The initial and final images will be arranged vertically on the left-hand side of the image and the Bader charge transition image will be included singularly on the right-hand side of the image. Any Bader charge difference values below the given threshold (default: 0.005) will be zeroed and therefore not coloured. All images will be given as top view (default: ('0x,0y,0z')) and as single periodicity ((1,1,1)) by default and can be adjusted.
+
+After conducting the projections, the difference in Bader charge between both images will be calculated. From this, the initial and final atomic systems will be elementally colour-coded which can be configured (e.g., Ni = lightgray, C = black) and saved into an image and the final image will be reincluded adjacent and colour coded (default: red-blue) using a colormap depending on the Bader charge range. The Bader charge transition image now contains the **complete final atomic structure**, with each atom coloured according to its Bader charge difference. Please note that the maximum absolute Bader charge difference across all images will be stored and used in determining the colormap range. The initial and final images will be arranged vertically on the left-hand side of the image and the Bader charge transition image will be included singularly on the right-hand side of the image. Any Bader charge difference values below the given threshold (default: 0.005) will be zeroed and therefore not coloured. All images will be given as top view (default: ('0x,0y,0z')) and as single periodicity ((1,1,1)) by default and can be adjusted.
+
+If a reference structure is supplied, the selected reference atoms are aligned to its periodic representation for the initial and final visualisations. If no reference structure is supplied, the selected reference atoms in the initial structure are aligned to the final structure.
 
 ## Image saving
+
 The figures will be saved in a new folder called "Bader_plots". Furthermore, if the ini and fin folders are nested within additional folders, the os.walk() function will find them, the folder locations will be stored and these new folders will be created within "Bader_plots" to save the images, so as to make them easier to find. Prior to the images being output and saved, the folder/image name will be printed for reference.
 
 Example saved images are provided below.
 
 ## Inputs
+
 ### Bader.json found
 
 Existing bader_max.json found. Load saved maximum Bader charge difference?
@@ -42,6 +90,7 @@ Existing bader_max.json found. Load saved maximum Bader charge difference?
 Accept this result/outcome? (y/n):
 
 ### Mode selection
+
 The inputs are as follows (N.B. if these are not followed, then these questions will be repeated until an appropriate response is provided):
 
 Enter mode (1/2/3/4):
@@ -49,6 +98,7 @@ Enter mode (1/2/3/4):
 Confirm mode x? (y/n):
 
 ### Shifting
+
 Previewing structure. (I.e., view the structure prior to shifting and then close it)
 
 Press Enter to close the figure...
@@ -57,16 +107,34 @@ Manual shift using max_radius = x.xxx Å (Starts after closing the figure. This 
 
 Shift in x (multiples of diameter, N.B. negative = left/down, positive = right/up): (I.e., input the +/- integer for the shift in the x-direction, this number will be multiplied by the covalent diameter, and all atoms in the unit cell will be shifted by that distance and in that direction)
 
-Shift in y (multiples of diameter, N.B. negative = left/down, positive = right/up): (Same as with the previous, but in the y-direction) 
+Shift in y (multiples of diameter, N.B. negative = left/down, positive = right/up): (Same as with the previous, but in the y-direction)
 
 Press Enter to close the figure...
 
 Accept this result? (y/n): y (Starts after closing the figure)
 
 ### Delete shift.json
+
 Existing shift.json detected. Delete shift.json?
 
 Accept this result/outcome? (y/n):
+
+### Reference structure
+
+The reference structure is optional.
+
+```python
+reference_folder = "reference"
+reference_symbols = ("Ni",)
+```
+
+To disable the external reference:
+
+```python
+reference_folder = None
+```
+
+The reference structure must contain a `CONTCAR` or `POSCAR`. The program checks that the requested reference elements and their atom counts are consistent with each reaction/NEB structure.
 
 # Key files, folders and inputs
 
@@ -88,7 +156,13 @@ reactionORtransition/
 
 I.e., CONTCAR/POSCAR and ACF.dat are mandatory for the code to work
 
-E.g., ![Hydrogenation](Hydrogenation/), as provided, contains ![C6](Hydrogenation/C6) and ![CH2O](Hydrogenation/CH2O) folders that each contain "fin" and "ini" and likewise contain CONTCAR/POSCAR and ACF.dat. When saving images into ![Bader_plots](Bader_plots), as the two key folders are contained within "C6", which in turn is nested within "Hydrogenation", this folder will create a subfolder called "Hydrogenation", into which the image files will be stored and entitled by these names connected with underscores (_). In the given example, this system outputs "Hydrogenation_C6.png" and "Hydrogenation_CH2O.png". See [Example](#example) below.
+An optional reference structure can additionally be provided:
+
+reference/
+
+-> CONTCARorPOSCAR
+
+E.g., ![Hydrogenation](Hydrogenation/), as provided, contains ![C6](Hydrogenation/C6) and ![CH2O](Hydrogenation/CH2O) folders that each contain "fin" and "ini" and likewise contain CONTCAR/POSCAR and ACF.dat. When saving images into ![Bader\_plots](Bader_plots), as the two key folders are contained within "C6", which in turn is nested within "Hydrogenation", this folder will create a subfolder called "Hydrogenation", into which the image files will be stored and entitled by these names connected with underscores (_). In the given example, this system outputs "Hydrogenation_C6.png" and "Hydrogenation_CH2O.png". See [Example](#example) below.
 
 ## Usage
 
@@ -104,17 +178,22 @@ views = [('0x,0y,0z')] #i.e., top view
 
 INITIAL = ("ini","initial","is") #Default is to store key files of each transition in folders entitled "ini" (initial state) and "fin" (final state), or anything similar. These variables will store such possible names. If there are alternate names, then please include them manually
 
-FINAL = ("fin","final","fs") #Default is to store key files of each transition in folders entitled "ini" (initial state) and "fin" (final state), or anything similar. These variables will store such possible names. If there are alternate names, then please include them manually
-    
+FINAL = ("fin","final","fs") #Default is to store key files of each transition in folders entitled "ini" (initial state) and "fin" (final state), or anything similar. If there are alternate names, then please include them manually
+
 tol = 0.005 #Default tolerance, i.e., if the (abs) difference in Bader charge is less than 0.005, it will treated as 0
-  
+
 cmp = plt.cm.RdBu_r #Default colormap also in function, can be changed to any desired, plt already imported
 
 save_dir="Bader_plots" #Save folder
 
 element_colors = {"Ni": "lightgray", "C": "black",} #Define desired colors for atoms in POSCAR/CONTCAR if desired, else default colours will be used
 
+reference_folder = "reference" #Optional external reference structure; use None to disable
+
+reference_symbols = ("Ni",) #Elements used for reference alignment
+
 ## external function files
+
 [`io_utils.py`](io_utils.py) #Collect file locations (POSCAR, CONTCAR, ACF.dat, .json files) for subsequent call
 
 [`atoms.py`](atoms.py) #Load atoms
@@ -123,26 +202,28 @@ element_colors = {"Ni": "lightgray", "C": "black",} #Define desired colors for a
 
 [`analysis.py`](analysis.py) #Collect Bader charges and calculate charge difference between 2 states, also outputs maximum absolute charge difference
 
-[`plotting.py`](plotting.py) #Plot Bader charge and save figures
+[`plotting.py`](plotting.py) #Plot Bader charge, align reference atoms for visualisation and save figures
 
 [`colors.py`](colors.py) #Set atomic colors and colormap for Bader charge. Also inputs same maximum absolute charge difference to apply to Bader charge colormap.
 
 [`layouts.py`](layouts.py) #Set display configurations of ASE images (with colors)
 
-[`geometry.py`](geometry.py) #Shifts in x,y direction where necessary
+[`geometry.py`](geometry.py) #Shifts in x,y direction where necessary and provides reference-structure alignment functions
 
 [`inputs.py`](inputs.py) #Different options of atomic shifting and image collection
 
 # Example
+
 Two examples are provided (the "C6" and "CH2O" folders), which you can use to observe the functionality of this code by running the main.py file. Please note that this is for single hydrogenation of the C6 atom of the furfural molecule and the O7 atom of the F-CH2O molecule. Feel free to delete these examples when running your own code. Please see two example figures below:
 
 ![Figure 1: Example figure of bader charge changes of C6 hydrogenation of furfural](Bader_plots/Hydrogenation/Hydrogenation_C6.png)
+
 <p align="center">
   <em>Figure 1: Example figure of bader charge changes of C6 hydrogenation of furfural.</em>
 </p>
 
 ![Figure 2: Example figure of bader charge changes of CH2O hydrogenation of furfural](Bader_plots/Hydrogenation/Hydrogenation_CH2O.png)
+
 <p align="center">
   <em>Figure 2: Example figure of bader charge changes of CH2O hydrogenation of furfural.</em>
 </p>
-
