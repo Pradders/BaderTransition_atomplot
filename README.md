@@ -2,19 +2,19 @@
 
 Leverages ASE, numpy and pyplot to calculate the differences in Bader charges between two structures acquired from VASP and then colour the different atoms according to the difference in charge (i.e., whether positive or negative).
 
-Version 2.0 (v2.0) current release.
+Version 3.0.0 (v3.0.0) current release.
 
-# Version 2.0
+# Version 3.0.0
 
-Version 2.0 (v2.0) updates the Bader charge visualisation for reaction/NEB structures.
+Version 3.0.0 (v3.0.0) refines the Bader charge visualisation workflow and improves consistency with the [StructurePlotting_ASE](https://github.com/Pradders/StructurePlotting_ASE) repository.
 
 Key updates:
 
-* Initial, final and Δq plots use consistent atom ordering.
-* An optional external reference structure can be used to align the reference surface.
-* Without an external reference, the final structure is used as the reference.
-* Reference atoms are defined using `reference_symbols` (default: `("Ni",)`).
-* Reference structures are checked for element and atom-count consistency.
+* Removed the redundant atoms.py module, as structures are loaded directly using ASE.
+* Reviewed function naming and code organisation for consistency with [StructurePlotting_ASE](https://github.com/Pradders/StructurePlotting_ASE) where appropriate.
+* Retained consistent atom ordering for initial, final and Δq plots.
+* Preserved optional external reference-surface alignment, with final-state alignment as a fallback.
+* Maintained reference-structure consistency checks and existing shift modes.
 
 ## Reference structure
 
@@ -52,6 +52,8 @@ This analysis will calculate the Bader charge difference between the initial and
 The atomic positions (POSCAR/CONTCAR) and the Bader charges (ACF.dat) will have been collected through VASP calculations. These will be placed within the initial and final folders of each reaction/transition, relative to the main.py file, which is the main file that executes the code. The names of the initial and final folders are respectively "ini" and "fin" by default and additional and/or replacement names (e.g., "initial", "final", "is", "fs") can be provided. If a .json file containing the maximum desired Bader charge already exists, then the user can choose to import the value or ignore it.
 
 An optional external reference structure can also be supplied through `reference_folder` in `main.py`. This structure is used to maintain a consistent representation of the selected reference atoms between systems.
+
+Structures are loaded directly using ASE within analysis.py; the separate atoms.py loading module has been removed as redundant.
 
 ## Projection
 
@@ -195,8 +197,6 @@ reference_symbols = ("Ni",) #Elements used for reference alignment
 ## external function files
 
 [`io_utils.py`](io_utils.py) #Collect file locations (POSCAR, CONTCAR, ACF.dat, .json files) for subsequent call
-
-[`atoms.py`](atoms.py) #Load atoms
 
 [`check.py`](check.py) #Ensure consistency between files, especially with number of atoms and atomic positions between POSCAR/CONTCAR and ACF.dat
 
