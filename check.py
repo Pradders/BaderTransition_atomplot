@@ -4,7 +4,7 @@ import numpy as np #Mathematical calculations
 from collections import Counter
 
 #Check length consistency of Bader files
-def check_Bader_consistency(item, ini_q, fin_q):
+def check_bader_consistency(item, ini_q, fin_q):
 
     # Bader vs Bader
     if len(ini_q) != len(fin_q): #i.e., Check that Bader charge lengths are consistent
@@ -54,7 +54,7 @@ def check_bader_alignment(atoms, acf_coords, tol=1e-3):
             f"(max diff = {np.max(diff):.4f} Å)"
         )
 
-#Check that the reference structure contains the requested elements and that the number of reference atoms matches the NEB structure.
+#Check that the reference structure contains the requested elements and that the number of reference atoms matches the supplied input/final structure.
 def check_reference_structure(atoms, reference_atoms, reference_symbols):
 
     #Check that reference symbols were provided.
@@ -69,7 +69,7 @@ def check_reference_structure(atoms, reference_atoms, reference_symbols):
         if reference_counts[symbol] == 0: #Should contain at least one symbol
             raise ValueError(f"Reference structure does not contain the requested element '{symbol}'.")
 
-    #Check that the NEB structure contains the same number of reference atoms as the supplied reference structure.
+    #Check that the supplied initial and final structures contain the same number of reference atoms as the supplied reference structure.
     atoms_counts = Counter(atoms.get_chemical_symbols())
 
     for symbol in reference_symbols: #Provide data about the missing elements
@@ -77,4 +77,4 @@ def check_reference_structure(atoms, reference_atoms, reference_symbols):
             raise ValueError(
                 f"Reference mismatch for '{symbol}': "
                 f"reference contains {reference_counts[symbol]} atoms, "
-                f"but the NEB structure contains {atoms_counts[symbol]}.")
+                f"but the supplied structure contains {atoms_counts[symbol]}.")

@@ -65,7 +65,7 @@ def view_cleanup(atoms, filename="temp_view.png", pause=True):
 
 #Plot all configurations, including with Bader charge difference shading gradients
 def plot_bader_result(res, delta_max=1, tol=0.005, cmap=None, repeat = (1,1,1), save_dir="Bader_plots", views=None, element_colors=None,
-                      layout="mixed_left", labels=None, styles=None, reference_atoms=None, reference_symbols=("Ni",)):
+                      layout="split", labels=None, styles=None, reference_atoms=None, reference_symbols=("Ni",)):
 
     from check import check_reference_structure
 
@@ -101,6 +101,11 @@ def plot_bader_result(res, delta_max=1, tol=0.005, cmap=None, repeat = (1,1,1), 
     atoms_fin = res["fin_structure"].copy()
     #The final structure is used for the Bader charge plot so that Δq matches the final state.
 
+    #For visualisation
+    if repeat != (1, 1, 1):
+        atoms_ini = atoms_ini.repeat(repeat)
+        atoms_fin = atoms_fin.repeat(repeat)
+
     #Activate if reference atoms are defined
     if reference_atoms is not None:
         # Use the reference surface for the initial and final visual structures.
@@ -115,11 +120,6 @@ def plot_bader_result(res, delta_max=1, tol=0.005, cmap=None, repeat = (1,1,1), 
         atoms_ini.wrap()
         #...but the initial Ni atoms should match with those in the final image for consistency
         atoms_ini = align_to_final(atoms_ini,atoms_fin,reference_symbols)    
-
-    #For visualisation
-    if repeat != (1, 1, 1):
-        atoms_ini = atoms_ini.repeat(repeat)
-        atoms_fin = atoms_fin.repeat(repeat)
 
     #Different rotations of images
     n_rot = len(views)
@@ -233,7 +233,7 @@ def plot_bader_result(res, delta_max=1, tol=0.005, cmap=None, repeat = (1,1,1), 
     #Display figures if desired
     #plt.show()
 
-#Prepare a visual copy of an NEB image so that the selected reference atoms use the same periodic representation as the reference structure.
+#Prepare a visual copy of a structure so that the selected reference atoms use a consistent periodic representation as the reference structure.
 def prepare_visual_structure(atoms, reference_atoms, reference_symbols):
 
     visual_atoms = atoms.copy()

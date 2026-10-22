@@ -8,7 +8,7 @@ import numpy as np #Mathematical calculations
 
 #Import external functions
 from io_utils import read_bader, delete_file, load_json, save_json
-from check import check_Bader_consistency, check_bader_alignment
+from check import check_bader_consistency, check_bader_alignment
 from inputs import process_structures, confirm
 
 import os #Operating system
@@ -48,7 +48,7 @@ def collect_delta_results(structure_files, skip_errors=False):
                 raise ValueError(f"Empty ACF.dat file in {item['transition']}")
 
             #Checks
-            check_Bader_consistency(item, ini_q, fin_q) #Check consistency of atomic length between files
+            check_bader_consistency(item, ini_q, fin_q) #Check consistency of atomic length between files
             check_bader_alignment(ini_atoms, ini_coords) #Coordinate alignment check
             check_bader_alignment(fin_atoms, fin_coords)
 
@@ -74,7 +74,7 @@ def collect_delta_results(structure_files, skip_errors=False):
 
         except Exception as e:
             if skip_errors: #Only if true, set to false otherwise
-                print(e)
+                print(f"Skipping transition {item.get('transition', '<unknown>')}: {e}")
                 continue
             else:
                 raise #Raise error if necessary        
