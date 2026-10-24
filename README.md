@@ -1,4 +1,4 @@
-# BaderCharge_plotter
+# BaderTransition_atomplot
 
 Leverages ASE, numpy and pyplot to calculate the differences in Bader charges between two structures acquired from VASP and then colour the different atoms according to the difference in charge (i.e., whether positive or negative).
 
@@ -15,7 +15,13 @@ Key updates:
 * Retained consistent atom ordering for initial, final and Δq plots.
 * Preserved optional external reference-surface alignment, with final-state alignment as a fallback.
 * Maintained reference-structure consistency checks and existing shift modes.
-
+* 
+# Related projects
+This repository is part of a collection of ASE-based tools for visualising VASP structures and analysing Bader charge changes.
+* [StructurePlotting_ASE](https://github.com/Pradders/StructurePlotting_ASE) — General visualisation of VASP structures, including top and side views, atomic shifting and optional reference-surface alignment.
+* [BaderTransition_atomplot](https://github.com/Pradders/BaderTransition_atomplot) — Visualisation of Bader charge differences between initial and final structures.
+* [BaderTransition_catalyst](https://github.com/Pradders/BaderTransition_catalyst) — Catalyst-specific Bader charge analysis, comparing corresponding catalyst atoms even when the total number of atoms differs between structures.
+* 
 ## Reference structure
 
 An optional external reference structure can be used to maintain a consistent representation of the reference surface between the initial and final states.
