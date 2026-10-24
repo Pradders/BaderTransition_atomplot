@@ -70,6 +70,9 @@ def read_bader(acf_file):
             coordinates.append([float(parts[x_col]),float(parts[y_col]),float(parts[z_col])]) #Append coordinates to new array
             charges.append(float(parts[charge_col])) #Append charges to new array
 
+    if not charges:
+        raise ValueError(f"No atomic data rows found in {acf_file}")
+
     return np.array(coordinates), np.array(charges) #Return new arrays
 
 #Find initial and final folders for comparisons

@@ -41,7 +41,7 @@ if __name__ == "__main__":
     "0x,0y,0z",     # top
     #"-90x,0y,0z",    # side
     #"-90x,-90y,0z", # front
-    ] #Choose one of ("0x,0y,0z") top, ("90x,0y,0z") side, ("-90x,-90y,0z") front, or add other rotations as desired
+    ] #Choose one of ("0x,0y,0z") #top, ("90x,0y,0z") #side, ("-90x,-90y,0z") #front, or add other rotations as desired
 
     element_colors = { #Define desired colors for atoms in POSCAR/CONTCAR if desired
         "Ni": "lightgray",

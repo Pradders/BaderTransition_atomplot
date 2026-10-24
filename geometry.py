@@ -26,7 +26,7 @@ def build_shift(atoms,get_int):
     #Print a message to present the maximum radius, especially in case of changes to the relative atom
     print(f"\nManual shift using max_radius = {d:.3f} Å")
 
-    #Input shifts to move the system based on the number of Ni atoms. Sign is important here as well. Negative sign means left/down shift. Positive sign means right/up shift.
+    #Input shifts to move the system based on the largest covalent radius in the structure. Sign is important here as well. Negative sign means left/down shift. Positive sign means right/up shift.
     nx = get_int("Shift in x (multiples of diameter, N.B. negative = left, positive = right): ")
     ny = get_int("Shift in y (multiples of diameter, N.B. negative = down, positive = up): ")
 
@@ -36,6 +36,7 @@ def build_shift(atoms,get_int):
 
     return shift #Return shift
 
+# Apply a shift without modifying the original structure.
 def apply_shift(atoms, shift):
 
     atoms_translate = atoms.copy() #Cannot return atoms without changing variable name, otherwise the original structure will be retained
@@ -70,6 +71,7 @@ def get_reference_structure(folder, repeat=(1,1,1)):
 
     return atoms
 
+# Align initial-state substrate atoms with the final-state substrate atoms.
 def align_to_final(atoms, final_atoms, reference_symbols):
 
     # Check that reference symbols were provided.

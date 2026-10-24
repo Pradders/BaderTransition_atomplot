@@ -39,14 +39,14 @@ def choose_shift_mode():
         print("Invalid mode, try again.\n")
 
 #Used to accept a result
-def confirm():
+def confirm(prompt="Accept this result/outcome? (y/n): "):
     while True:
-        ans = input("Accept this result/outcome? (y/n): ").lower()
+        ans = input(prompt).lower()
         if ans in ["y", "n"]:
             return ans == "y"
         print("Please enter 'y' or 'n'.")
 
-#Dependin on the mode selected, apply appropriate imaging collection method
+#Depending on the mode selected, apply appropriate imaging collection method
 def process_structures(atoms_ini, atoms_fin):
 
     mode = choose_shift_mode() #Which mode?
@@ -83,7 +83,7 @@ def process_structures(atoms_ini, atoms_fin):
 
         return test_ini, test_fin #Return shifted results
 
-    elif mode == 3: #Mode 3: same shift for each individual image
+    elif mode == 3: #Mode 3: same shift for all images
 
         shift = load_json("shift.json") #Load constant shift
 

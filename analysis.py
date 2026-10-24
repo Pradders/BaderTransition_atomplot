@@ -90,7 +90,8 @@ def collect_delta_results(structure_files, skip_errors=False):
     #print(delta_results)
 
     #Save updated maximum for future reuse
-    save_json(delta_max, "bader_max.json")
+    if delta_results:
+        save_json(delta_max, "bader_max.json")
 
     #Output this array for future use
     return delta_results, delta_max

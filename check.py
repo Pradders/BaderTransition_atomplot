@@ -31,7 +31,7 @@ def check_bader_consistency(item, ini_q, fin_q):
     for i, (a_ini, a_fin) in enumerate(zip(ini_atoms, fin_atoms)):
         if a_ini.symbol != a_fin.symbol:
             raise ValueError(
-                f"Element mismatch at index {i} in {item['transition']}: "
+                f"Element mismatch at index {i+1} in {item['transition']}: "
                 f"{a_ini.symbol} (ini) != {a_fin.symbol} (fin)"
             )
 
