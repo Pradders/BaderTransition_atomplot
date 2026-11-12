@@ -2,19 +2,25 @@
 
 Leverages ASE, numpy and pyplot to calculate the differences in Bader charges between two structures acquired from VASP and then colour the different atoms according to the difference in charge (i.e., whether positive or negative).
 
-Version 3.0.0 (v3.0.0) current release.
+Version 4.0.0 (v4.0.0) current release.
 
-# Version 3.0.0
+# Version 4.0.0
 
-Version 3.0.0 (v3.0.0) refines the Bader charge visualisation workflow and improves consistency with the [StructurePlotting_ASE](https://github.com/Pradders/StructurePlotting_ASE) repository.
+Version 4.0.0 (v4.0.0) refines the Bader charge visualisation workflow and improves consistency with the [StructurePlotting_ASE](https://github.com/Pradders/StructurePlotting_ASE) repository.
 
 Key updates:
 
 * Removed the redundant atoms.py module, as structures are loaded directly using ASE.
-* Reviewed function naming and code organisation for consistency with [StructurePlotting_ASE](https://github.com/Pradders/StructurePlotting_ASE) where appropriate.
+* Reviewed function naming and code organisation for consistency with other similar codes where appropriate.
 * Retained consistent atom ordering for initial, final and Δq plots.
-* Preserved optional external reference-surface alignment, with final-state alignment as a fallback.
+* Introduced three reference-processing modes: no reference, final-structure reference, and external reference structure.
 * Maintained reference-structure consistency checks and existing shift modes.
+* Added full cell compatibility checks, including cell dimensions and orientation, when comparing initial and final structures and when applying an external reference structure.
+* Improved validation of reference elements, reference atom counts, and Bader data consistency.
+* Added more specific error messages for incompatible structures and inconsistent Bader data.
+* Improved handling of systems that do not contain the selected reference elements, avoiding unnecessary reference processing.
+* Validated user-defined chemical symbols and atomic colour inputs.
+* Retained generic function defaults so that reference elements and external reference structures are optional rather than assumed.
 
 # Related projects
 This repository is part of a collection of ASE-based tools for visualising VASP structures and analysing Bader charge changes.
@@ -27,26 +33,41 @@ This repository is part of a collection of ASE-based tools for visualising VASP 
 
 An optional external reference structure can be used to maintain a consistent representation of the reference surface between the initial and final states.
 
-In `main.py`:
+Three reference-processing modes are available:
 
+1. No reference
 ```python
-reference_folder = "reference"
+reference_folder = None
+reference_symbols = None
+```
+No reference structure is applied. The initial and final structures are wrapped into the unit cell and plotted using their original atomic positions.
+
+2. Final structure as reference
+```python
+reference_folder = None
+reference_symbols = ("Ni",)
+```
+The final structure is used as the reference representation. The selected atoms in the initial structure are aligned to their corresponding periodic positions in the final structure for visualisation.
+
+3. External reference structure
+```python
+reference_folder = "Reference"
 reference_symbols = ("Ni",)
 ```
 
-If no external reference is required:
-
-```python
-reference_folder = None
-```
+An external reference structure is loaded and used to align the selected atoms in both the initial and final structures to a consistent periodic representation.
 
 The reference folder should contain either a `CONTCAR` or `POSCAR`, with `CONTCAR` preferred.
 
-The selected `reference_symbols` identify the atoms used to align the reference representation.
+The selected `reference_symbols` identify the atoms used for reference alignment. These can be changed to any valid chemical element or combination of elements, depending on the system being investigated.
 
-When an external reference is supplied, the selected reference atoms in the initial and final structures are represented consistently with the external reference while the remaining atoms retain their respective reaction-state positions.
+The reference structure is used for visual alignment only. The remaining atoms retain their respective reaction-state positions. The original calculated structures are not modified by the visual reference-alignment procedure.
 
-When no external reference is supplied, the selected reference atoms in the initial structure are aligned to their corresponding positions in the final structure.
+Before applying an external reference, the program checks the full cell matrix to ensure compatibility between the reference and the structure being visualised. This includes cell dimensions and orientation. It also checks that the selected reference elements and their atom counts are consistent.
+
+If none of the selected reference elements is present in either the initial or final structure, reference processing is skipped and the original structures are plotted. If the selected reference elements are present in only one structure, an error is raised.
+
+The code assumes that atoms of the same element retain their corresponding ordering between the structures and the reference. The current checks verify chemical-symbol ordering and atom counts but do not independently identify permutations between atoms of the same element.
 
 # General procedure
 
@@ -56,11 +77,13 @@ This analysis will calculate the Bader charge difference between the initial and
 
 ## Folder and file access
 
-The atomic positions (POSCAR/CONTCAR) and the Bader charges (ACF.dat) will have been collected through VASP calculations. These will be placed within the initial and final folders of each reaction/transition, relative to the main.py file, which is the main file that executes the code. The names of the initial and final folders are respectively "ini" and "fin" by default and additional and/or replacement names (e.g., "initial", "final", "is", "fs") can be provided. If a .json file containing the maximum desired Bader charge already exists, then the user can choose to import the value or ignore it.
+The atomic positions (`POSCAR`/`CONTCAR`) and the Bader charges (`ACF.dat`) will have been collected through VASP calculations. These will be placed within the initial and final folders of each reaction/transition, relative to the `main.py` file, which is the main file that executes the code. The names of the initial and final folders are respectively "ini" and "fin" by default and additional and/or replacement names (e.g., "initial", "final", "is", "fs") can be provided. If a `.json` file containing the maximum desired Bader charge already exists, then the user can choose to import the value or ignore it.
+
+An optional reference structure can also be supplied through reference_folder in `main.py`. The selected reference elements are specified using reference_symbols.
 
 An optional external reference structure can also be supplied through `reference_folder` in `main.py`. This structure is used to maintain a consistent representation of the selected reference atoms between systems.
 
-Structures are loaded directly using ASE within analysis.py; the separate atoms.py loading module has been removed as redundant.
+Structures are loaded directly using ASE within `analysis.py`; the separate atoms.py loading module has been removed as redundant.
 
 ## Projection
 
@@ -80,13 +103,13 @@ If any of the inputs (see [Inputs](#inputs)) are not appropriately met with the 
 
 ## Colour coding
 
-After conducting the projections, the difference in Bader charge between both images will be calculated. From this, the initial and final atomic systems will be elementally colour-coded which can be configured (e.g., Ni = lightgray, C = black) and saved into an image and the final image will be reincluded adjacent and colour coded (default: red-blue) using a colormap depending on the Bader charge range. The Bader charge transition image now contains the **complete final atomic structure**, with each atom coloured according to its Bader charge difference. Please note that the maximum absolute Bader charge difference across all images will be stored and used in determining the colormap range. The initial and final images will be arranged vertically on the left-hand side of the image and the Bader charge transition image will be included singularly on the right-hand side of the image. Any Bader charge difference values below the given threshold (default: 0.005) will be zeroed and therefore not coloured. All images will be given as top view (default: ('0x,0y,0z')) and as single periodicity ((1,1,1)) by default and can be adjusted.
+After conducting the projections, the difference in Bader charge between both images will be calculated. From this, the initial and final atomic systems will be elementally colour-coded which can be configured (e.g., Ni = lightgray, C = black) and saved into an image and the final image will be reincluded adjacent and colour coded (default: red-blue) using a colormap depending on the Bader charge range. The Bader charge transition image now contains the **complete final atomic structure**, with each atom coloured according to its Bader charge difference. Please note that the maximum absolute Bader charge difference across all images will be stored and used in determining the colormap range. The initial and final images will be arranged vertically on the left-hand side of the image and the Bader charge transition image will be included singularly on the right-hand side of the image. Any Bader charge difference values below the given threshold (default: `0.005`) will be zeroed and therefore not coloured. All images will be given as top view (`default: ('0x,0y,0z')`) and as single periodicity (`(1,1,1)`) by default and can be adjusted.
 
-If a reference structure is supplied, the selected reference atoms are aligned to its periodic representation for the initial and final visualisations. If no reference structure is supplied, the selected reference atoms in the initial structure are aligned to the final structure.
+Reference alignment follows the three modes described in the Reference structure section. When no reference processing is requested, the structures are plotted without reference alignment.
 
 ## Image saving
 
-The figures will be saved in a new folder called "Bader_plots". Furthermore, if the ini and fin folders are nested within additional folders, the os.walk() function will find them, the folder locations will be stored and these new folders will be created within "Bader_plots" to save the images, so as to make them easier to find. Prior to the images being output and saved, the folder/image name will be printed for reference.
+The figures will be saved in a new folder called "Bader_plots". Furthermore, if the ini and fin folders are nested within additional folders, the `os.walk()` function will find them, the folder locations will be stored and these new folders will be created within "Bader_plots" to save the images, so as to make them easier to find. Prior to the images being output and saved, the folder/image name will be printed for reference.
 
 Example saved images are provided below.
 
@@ -94,20 +117,24 @@ Example saved images are provided below.
 
 ### Bader.json found
 
+```python
 Existing bader_max.json found. Load saved maximum Bader charge difference?
 
 Accept this result/outcome? (y/n):
+```
 
 ### Mode selection
 
 The inputs are as follows (N.B. if these are not followed, then these questions will be repeated until an appropriate response is provided):
-
+```python
 Enter mode (1/2/3/4):
 
 Confirm mode x? (y/n):
+```
 
 ### Shifting
 
+```python
 Previewing structure. (I.e., view the structure prior to shifting and then close it)
 
 Press Enter to close the figure...
@@ -121,29 +148,41 @@ Shift in y (multiples of diameter, N.B. negative = left/down, positive = right/u
 Press Enter to close the figure...
 
 Accept this result? (y/n): y (Starts after closing the figure)
+```
 
 ### Delete shift.json
 
+```python
 Existing shift.json detected. Delete shift.json?
 
 Accept this result/outcome? (y/n):
+```
 
 ### Reference structure
 
 The reference structure is optional.
 
+The following settings determine which reference-processing mode is used:
+
+No reference:
 ```python
-reference_folder = "reference"
+reference_folder = None
+reference_symbols = None
+```
+
+Final structure as reference:
+```python
+reference_folder = None
 reference_symbols = ("Ni",)
 ```
 
-To disable the external reference:
-
+External reference:
 ```python
-reference_folder = None
+reference_folder = "Reference"
+reference_symbols = ("Ni",)
 ```
 
-The reference structure must contain a `CONTCAR` or `POSCAR`. The program checks that the requested reference elements and their atom counts are consistent with each reaction/NEB structure.
+The reference structure must contain a CONTCAR or POSCAR. The program checks full cell compatibility, selected reference elements and their atom counts before applying an external reference.
 
 # Key files, folders and inputs
 
@@ -175,43 +214,45 @@ E.g., ![Hydrogenation](Hydrogenation/), as provided, contains ![C6](Hydrogenatio
 
 ## Usage
 
-python main.py ([`main.py`](main.py))
+python `main.py` ([`main.py`](main.py))
 
-## Options for output adjustment, can be configured in main and/or function files
+**Options for output adjustment, can be configured in main and/or function files**
 
-layout = "horizontal", "vertical", "split" #I.e., How the images should be displayed in the final figure
+`layout = "horizontal", "vertical", "split"` #I.e., How the images should be displayed in the final figure
 
-repeat = (1,1,1) #i.e., periodic cell expansion
+`repeat = (1,1,1)` #i.e., periodic cell expansion
 
-views = [('0x,0y,0z')] #i.e., top view
+`views = [('0x,0y,0z')]` #i.e., top view
 
-INITIAL = ("ini","initial","is") #Default is to store key files of each transition in folders entitled "ini" (initial state) and "fin" (final state), or anything similar. These variables will store such possible names. If there are alternate names, then please include them manually
+`INITIAL = ("ini","initial","is")` #Default is to store key files of each transition in folders entitled "ini" (initial state) and "fin" (final state), or anything similar. These variables will store such possible names. If there are alternate names, then please include them manually
 
-FINAL = ("fin","final","fs") #Default is to store key files of each transition in folders entitled "ini" (initial state) and "fin" (final state), or anything similar. If there are alternate names, then please include them manually
+`FINAL = ("fin","final","fs")` #Default is to store key files of each transition in folders entitled "ini" (initial state) and "fin" (final state), or anything similar. If there are alternate names, then please include them manually
 
-tol = 0.005 #Default tolerance, i.e., if the (abs) difference in Bader charge is less than 0.005, it will treated as 0
+`tol = 0.005` #Default tolerance, i.e., if the (abs) difference in Bader charge is less than 0.005, it will treated as 0
 
-cmp = plt.cm.RdBu_r #Default colormap also in function, can be changed to any desired, plt already imported
+`cmp = plt.cm.RdBu_r` #Default colormap also in function, can be changed to any desired, plt already imported
 
-save_dir="Bader_plots" #Save folder
+`save_dir="Bader_plots"` #Save folder
 
-element_colors = {"Ni": "lightgray", "C": "black",} #Define desired colors for atoms in POSCAR/CONTCAR if desired, else default colours will be used
+`element_colors = {"Ni": "lightgray", "C": "black",}` #Define desired colors for atoms in POSCAR/CONTCAR if desired, else default colours will be used
 
-reference_folder = "reference" #Optional external reference structure; use None to disable
+`reference_folder = "reference"` #Optional external reference structure; use None to disable
 
-reference_symbols = ("Ni",) #Elements used for reference alignment
+`reference_symbols = ("Ni",)` #Elements used for reference alignment
+
+To disable all reference processing, set both reference_folder and reference_symbols to None. To use the final structure as the reference, set reference_folder = None and provide the desired reference_symbols.
 
 ## external function files
 
 [`io_utils.py`](io_utils.py) #Collect file locations (POSCAR, CONTCAR, ACF.dat, .json files) for subsequent call
 
-[`check.py`](check.py) #Ensure consistency between files, especially with number of atoms and atomic positions between POSCAR/CONTCAR and ACF.dat
+[`check.py`](check.py) #Ensure consistency between files, especially with number of atoms and atomic positions between POSCAR/CONTCAR and ACF.dat. Also checks initial/final cell compatibility, reference cell compatibility, chemical-symbol ordering and selected reference-element counts.
 
 [`analysis.py`](analysis.py) #Collect Bader charges and calculate charge difference between 2 states, also outputs maximum absolute charge difference
 
-[`plotting.py`](plotting.py) #Plot Bader charge, align reference atoms for visualisation and save figures
+[`plotting.py`](plotting.py) #Plot Bader charge, align reference atoms for visualisation and save figures. Also handles reference-mode selection and checks whether reference processing is applicable.
 
-[`colors.py`](colors.py) #Set atomic colors and colormap for Bader charge. Also inputs same maximum absolute charge difference to apply to Bader charge colormap.
+[`colors.py`](colors.py) #Set atomic colors and colormap for Bader charge. Also inputs same maximum absolute charge difference to apply to Bader charge colormap. Validates user-defined chemical symbols and colour values.
 
 [`layouts.py`](layouts.py) #Set display configurations of ASE images (with colors)
 
