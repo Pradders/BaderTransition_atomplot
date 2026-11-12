@@ -5,6 +5,7 @@
 from ase.visualize.plot import plot_atoms
 #Use to write temporary files
 from ase.io import write
+from ase.data import chemical_symbols #Valid chemical elements
 
 #Plot atoms and use colormap where necessary
 import matplotlib.pyplot as plt #Plot adsorption surfaces
@@ -16,6 +17,7 @@ import os #Operating system
 from colors import get_atom_colors, get_delta_colors
 from layouts import create_axes, iter_axes
 from geometry import align_to_final
+from io_utils import get_reference_structure
 
 # Default labels
 DEFAULT_LABELS = {
@@ -65,7 +67,7 @@ def view_cleanup(atoms, filename="temp_view.png", pause=True):
 
 #Plot all configurations, including with Bader charge difference shading gradients
 def plot_bader_result(res, delta_max=1, tol=0.005, cmap=None, repeat = (1,1,1), save_dir="Bader_plots", views=None, element_colors=None,
-                      layout="split", labels=None, styles=None, reference_atoms=None, reference_symbols=("Ni",)):
+                      layout="split", labels=None, styles=None, reference_folder=None, reference_symbols=None):
 
     from check import check_reference_structure
 
@@ -76,6 +78,8 @@ def plot_bader_result(res, delta_max=1, tol=0.005, cmap=None, repeat = (1,1,1), 
     #Set views to default if not given
     if views is None:
         views = [('0x,0y,0z')]
+    if not views:
+        raise ValueError("At least one viewing rotation must be provided.")
 
     #Select a default colormap if necessary
     if cmap is None:
@@ -106,19 +110,60 @@ def plot_bader_result(res, delta_max=1, tol=0.005, cmap=None, repeat = (1,1,1), 
         atoms_ini = atoms_ini.repeat(repeat)
         atoms_fin = atoms_fin.repeat(repeat)
 
-    #Activate if reference atoms are defined
+    # Validate reference symbols when reference processing is enabled
+    if reference_folder is not None or reference_symbols is not None:
+        if isinstance(reference_symbols, str) or not reference_symbols: #This check ensures that the string is located within the tuple/array
+            raise ValueError("Reference symbols must contain at least one element symbol.")
+    
+        for symbol in reference_symbols:
+            if symbol not in chemical_symbols[1:]:
+                raise ValueError(f"Invalid chemical element symbol: '{symbol}'.")
+
+    #Load the reference structure if a reference folder was provided
+    if reference_folder is not None:
+        reference_atoms = get_reference_structure(reference_folder, repeat)
+    
+        if reference_atoms is None:
+            raise FileNotFoundError(f"Could not load reference structure from: {reference_folder}.")
+    elif reference_symbols is not None:
+        reference_atoms = atoms_fin.copy()
+    else:
+        reference_atoms = None
+
+    reference_warning_printed = False #Only print once for each system
+    reference_checked = False  # Track whether reference compatibility has been checked
+
+    # Apply reference processing
     if reference_atoms is not None:
-        # Use the reference surface for the initial and final visual structures.
-        for atoms in (atoms_ini, atoms_fin):
-            check_reference_structure(atoms, reference_atoms, reference_symbols)
-        atoms_ini = prepare_visual_structure(atoms_ini,reference_atoms,reference_symbols)
-        atoms_fin = prepare_visual_structure(atoms_fin,reference_atoms,reference_symbols)
+
+        # Check whether the selected elements are present in the input structures
+        ini_indices = [i for i, symbol in enumerate(atoms_ini.get_chemical_symbols()) if symbol in reference_symbols]
+        fin_indices = [i for i, symbol in enumerate(atoms_fin.get_chemical_symbols()) if symbol in reference_symbols]
+
+        # If neither structure contains the selected elements, skip reference processing
+        if not ini_indices and not fin_indices:
+            if not reference_warning_printed:
+                print(f"Warning: No atoms matching {reference_symbols} found in system '{res['transition']}'. Plotting original structures without reference.")
+                reference_warning_printed = True
+            #Use the structures as they are
+            atoms_ini.wrap()
+            atoms_fin.wrap()
+        elif not ini_indices or not fin_indices:
+            raise ValueError(f"Reference atom mismatch in system '{res['transition']}'.")
+        else:
+            # Use the reference surface for the initial and final visual structures.
+            for atoms in (atoms_ini, atoms_fin):
+                if not reference_checked:
+                    check_reference_structure(atoms, reference_atoms, reference_symbols)
+                    reference_checked = True
+            atoms_ini = prepare_visual_structure(atoms_ini, reference_atoms, reference_symbols)
+            atoms_fin = prepare_visual_structure(atoms_fin, reference_atoms, reference_symbols)
 
     #Otherwise, use the structures as they are...
     else:
         atoms_fin.wrap()
         atoms_ini.wrap()
-        #...but the initial Ni atoms should match with those in the final image for consistency
+        #...but the initial reference substrate atoms should match with those in the final image for consistency
         atoms_ini = align_to_final(atoms_ini,atoms_fin,reference_symbols)    
 
     #Different rotations of images
@@ -249,16 +294,8 @@ def prepare_visual_structure(atoms, reference_atoms, reference_symbols):
     current_indices = {}
 
     for symbol in reference_symbols:
-
-        reference_indices[symbol] = [
-            i for i, atom_symbol in enumerate(reference_atoms.get_chemical_symbols())
-            if atom_symbol == symbol
-        ]
-
-        current_indices[symbol] = [
-            i for i, atom_symbol in enumerate(atoms.get_chemical_symbols())
-            if atom_symbol == symbol
-        ]
+        reference_indices[symbol] = [i for i, atom_symbol in enumerate(reference_atoms.get_chemical_symbols()) if atom_symbol == symbol]
+        current_indices[symbol] = [i for i, atom_symbol in enumerate(atoms.get_chemical_symbols()) if atom_symbol == symbol]
 
     #Find one common periodic translation for the whole structure.
     best_shift = np.zeros(3)
