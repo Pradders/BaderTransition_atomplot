@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt #Plot function, called here only to account for 
 
 #Define the main function to run imported functions
 def main(base, INITIAL=("ini",), FINAL=("fin",), tol=0.005, cmp=None, repeat=(1,1,1), save_dir="Bader_plots",views=None,
-         element_colors=None,layout="split",labels=None,styles=None,reference_folder=None, reference_symbols=None):
+         element_colors=None,layout="split",labels=None,styles=None,reference_folder=None,reference_symbols=None):
     # Find transition files
     structure_files = find_transition(base,INITIAL,FINAL)
     # Collect Bader charges and calculate charge differences

@@ -48,7 +48,7 @@ def collect_delta_results(structure_files, skip_errors=False):
             check_bader_consistency(item, ini_q, fin_q) #Check consistency of atomic length between files
             check_bader_alignment(ini_atoms, ini_coords) #Coordinate alignment check
             check_bader_alignment(fin_atoms, fin_coords)
-
+            
             #Calculate Bader charge difference
             delta_q = np.round(np.array(fin_q) - np.array(ini_q), 3)
 

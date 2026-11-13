@@ -115,9 +115,9 @@ def plot_bader_result(res, delta_max=1, tol=0.005, cmap=None, repeat = (1,1,1), 
         if isinstance(reference_symbols, str) or not reference_symbols: #This check ensures that the string is located within the tuple/array
             raise ValueError("Reference symbols must contain at least one element symbol.")
     
-        for symbol in reference_symbols:
-            if symbol not in chemical_symbols[1:]:
-                raise ValueError(f"Invalid chemical element symbol: '{symbol}'.")
+    for symbol in reference_symbols:
+        if symbol not in chemical_symbols[1:]:
+            raise ValueError(f"Invalid chemical element symbol: '{symbol}'.")
 
     #Load the reference structure if a reference folder was provided
     if reference_folder is not None:
@@ -309,9 +309,7 @@ def prepare_visual_structure(atoms, reference_atoms, reference_symbols):
 
             for symbol in reference_symbols:
 
-                for reference_index, current_index in zip(
-                    reference_indices[symbol],
-                    current_indices[symbol]):
+                for reference_index, current_index in zip(reference_indices[symbol],current_indices[symbol]):
 
                     #Current atom with a common periodic translation.
                     candidate = current_scaled[current_index].copy()
@@ -326,6 +324,7 @@ def prepare_visual_structure(atoms, reference_atoms, reference_symbols):
 
                     total_distance += distance**2
 
+            # Keep the common translation giving the smallest total distance for all reference atoms.
             if total_distance < best_distance:
                 best_distance = total_distance
                 best_shift = np.array([x_shift, y_shift, 0.0])
@@ -336,12 +335,7 @@ def prepare_visual_structure(atoms, reference_atoms, reference_symbols):
     #Update only the selected reference atoms, preserving atom order.
     for symbol in reference_symbols:
 
-        for reference_index, current_index in zip(
-            reference_indices[symbol],
-            current_indices[symbol]):
-
-            visual_atoms.positions[current_index] = (
-                reference_scaled[reference_index] @ cell
-            )
+        for reference_index, current_index in zip(reference_indices[symbol], current_indices[symbol]):
+            visual_atoms.positions[current_index] = (reference_scaled[reference_index] @ cell)
 
     return visual_atoms

@@ -65,9 +65,7 @@ def read_bader(acf_file):
     missing = [col for col in required_badercols if col not in cols]
     #Check indeed if missing has any elements in it. If so, stop.
     if missing:
-        raise ValueError(
-        f"ACF.dat missing columns {missing} in {acf_file}"
-        )
+        raise ValueError(f"ACF.dat missing columns {missing} in {acf_file}")
 
     #Try to read columns
     try:

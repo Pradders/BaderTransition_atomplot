@@ -1,7 +1,6 @@
 #Perform checks to ensure data consistency
 
-#Use to collect, visualise atomic structures
-from ase.io import read
+from ase.io import read #Use to collect, visualise atomic structures
 import numpy as np #Mathematical calculations
 from ase.data import chemical_symbols  # ASE chemical symbols
 from collections import Counter
@@ -23,9 +22,7 @@ def check_bader_consistency(item, ini_q, fin_q):
     # Bader vs Bader
     if len(ini_q) != len(fin_q): #i.e., Check that Bader charge lengths are consistent
         raise ValueError( #If not, raise an error
-            f"Atom count mismatch in {item['transition']}: "
-            f"ini={len(ini_q)}, fin={len(fin_q)}"
-        )
+            f"Atom count mismatch in {item['transition']}: ini={len(ini_q)}, fin={len(fin_q)}")
 
     #Atoms in each structure
     ini_atoms = read(item["ini_structure"])
@@ -38,8 +35,7 @@ def check_bader_consistency(item, ini_q, fin_q):
     # POSCAR vs Bader atom length
     if (fin_len != len(fin_q)) or (ini_len != len(ini_q)): #i.e., Check that Bader charge and POSCAR/CONTCAR lengths are consistent
         raise ValueError( #If not, raise an error
-            f"Mismatch between POSCAR/CONTCAR and Bader atoms in {item['transition']}"
-        )
+            f"Mismatch between POSCAR/CONTCAR and Bader atoms in {item['transition']}")
 
     # Check cell compatibility between initial and final structures. If the images are not derived from NEB calculations, then they may still be inconsistent.
     check_cell_compatibility(ini_atoms, fin_atoms)
@@ -47,10 +43,7 @@ def check_bader_consistency(item, ini_q, fin_q):
     #Check element ordering consistency
     for i, (a_ini, a_fin) in enumerate(zip(ini_atoms, fin_atoms)):
         if a_ini.symbol != a_fin.symbol:
-            raise ValueError(
-                f"Element mismatch at index {i+1} in {item['transition']}: "
-                f"{a_ini.symbol} (ini) != {a_fin.symbol} (fin)"
-            )
+            raise ValueError(f"Element mismatch at index {i+1} in {item['transition']}: {a_ini.symbol} (ini) != {a_fin.symbol} (fin)")
 
 #Check that Bader coordinates and POSCAR/CONTCAR coordinates are equivalent
 def check_bader_alignment(atoms, acf_coords, tol=1e-3):
@@ -67,9 +60,7 @@ def check_bader_alignment(atoms, acf_coords, tol=1e-3):
     #Should be within threshold
     if np.max(diff) > tol:
         raise ValueError( #Else raise an error
-            f"ACF.dat coordinates do not match POSCAR/CONTCAR "
-            f"(max diff = {np.max(diff):.4f} Å)"
-        )
+            f"ACF.dat coordinates do not match POSCAR/CONTCAR (max diff = {np.max(diff):.4f} Å)")
 
 #Check that the reference structure contains the requested elements and that the number of reference atoms matches the supplied input/final structure.
 def check_reference_structure(atoms, reference_atoms, reference_symbols):
