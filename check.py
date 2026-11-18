@@ -52,10 +52,19 @@ def check_bader_alignment(atoms, acf_coords, tol=1e-3):
     #This difference is to check that atoms in POSCAR/CONTCAR and ACF.dat are the same.
     #Here, difference should not be too large, and hence it is defaulted.
 
+    from ase.geometry import find_mic
+
     pos = atoms.get_positions()  # Cartesian from ASE
 
-    #Calculate difference based on absolute distance
-    diff = np.linalg.norm(pos - acf_coords, axis=1)
+    # Check that both files contain the same number of atoms
+    if len(pos) != len(acf_coords):
+        raise ValueError(f"Atom count mismatch: POSCAR/CONTCAR has {len(pos)} atoms, ACF.dat has {len(acf_coords)} atoms.")
+
+    # Calculate minimum-image distance, accounting for periodic boundary conditions
+    _, diff = find_mic(pos - acf_coords, atoms.get_cell(), pbc=atoms.get_pbc())
+
+    # Identify atom with the largest coordinate difference
+    max_index = np.argmax(diff)
 
     #Should be within threshold
     if np.max(diff) > tol:
